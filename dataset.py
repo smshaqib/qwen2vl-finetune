@@ -123,9 +123,12 @@ class QwenVLCollator:
             for m in messages_list
         ]
         image_inputs, video_inputs = process_vision_info(messages_list)
+        # IMPORTANT: do NOT truncate. Truncation cuts image-placeholder tokens out of
+        # the text while the vision tower still emits all features -> "Image features
+        # and image tokens do not match". Image token count is bounded by max_pixels.
         batch = self.processor(
             text=texts, images=image_inputs, videos=video_inputs,
-            padding=True, truncation=True, max_length=self.max_len,
+            padding=True, truncation=False,
             return_tensors="pt",
         )
         labels = batch["input_ids"].clone()

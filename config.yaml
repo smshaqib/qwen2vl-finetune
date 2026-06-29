@@ -8,8 +8,8 @@ model:
   # fp16 LoRA for the 2B model — fits in 16 GB and works on T4.
   # 4-bit (bitsandbytes) only for the 7B AND only on a T4, never P100.
   load_in_4bit: false
-  min_pixels: 200704          # 256*28*28
-  max_pixels: 1003520         # 1280*28*28
+  min_pixels: 50176           # 64*28*28
+  max_pixels: 401408          # 512*28*28 -> ~128 image tokens, fits seq len, keeps meme text legible
 
 lora:
   r: 16
@@ -41,7 +41,7 @@ train:
   logging_steps: 10
   save_steps: 200
   save_total_limit: 2
-  max_seq_length: 1024
+  max_seq_length: 2048
   bf16: false
   fp16: true
   gradient_checkpointing: true
