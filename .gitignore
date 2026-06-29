@@ -6,3 +6,6 @@ qwen2vl-lora/
 *.bin
 .venv/
 .env
+
+kaggle_out/
+kaggle_out2/
