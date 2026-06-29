@@ -83,10 +83,19 @@ def build_messages(example, cfg, with_answer=True):
         answer = str(example[d["answer_field"]])
 
     question = d.get("question") or str(example.get(d.get("question_field", ""), ""))
+    # Pass the SAME pixel bounds into the image element that the processor uses.
+    # Otherwise process_vision_info (which resizes here) and the processor (which
+    # expands <|image_pad|>) disagree -> "Image features and image tokens do not match".
+    image_el = {"type": "image", "image": image}
+    mcfg = cfg.get("model", {})
+    if "min_pixels" in mcfg:
+        image_el["min_pixels"] = mcfg["min_pixels"]
+    if "max_pixels" in mcfg:
+        image_el["max_pixels"] = mcfg["max_pixels"]
     messages = [
         {"role": "system", "content": d["system_prompt"]},
         {"role": "user", "content": [
-            {"type": "image", "image": image},
+            image_el,
             {"type": "text", "text": question},
         ]},
     ]
