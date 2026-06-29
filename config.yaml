@@ -1,16 +1,13 @@
 # ----------------------------------------------------------------------------
-# Config for Qwen2-VL QLoRA fine-tuning on Kaggle GPU.
-# Edit values here; train.py reads everything from this file.
+# Qwen2-VL fine-tune on the MemeDecode dataset (4-class meme classification).
+# Dataset mounted on Kaggle at /kaggle/input/meme-data
 # ----------------------------------------------------------------------------
 
 model:
-  # Swap to "Qwen/Qwen2-VL-7B-Instruct" once 2B works (7B needs 4-bit + a T4).
   name: "Qwen/Qwen2-VL-2B-Instruct"
-  # fp16 LoRA for the 2B model — fits in 16 GB and works on P100 or T4.
-  # Set true ONLY for the 7B model AND when running on a T4 (bitsandbytes 4-bit
-  # is unsupported on the older P100 / compute capability 6.0).
+  # fp16 LoRA for the 2B model — fits in 16 GB and works on T4.
+  # 4-bit (bitsandbytes) only for the 7B AND only on a T4, never P100.
   load_in_4bit: false
-  # Image token budget per sample. Lower = less VRAM, faster. Qwen uses 28x28 patches.
   min_pixels: 200704          # 256*28*28
   max_pixels: 1003520         # 1280*28*28
 
@@ -18,37 +15,35 @@ lora:
   r: 16
   alpha: 32
   dropout: 0.05
-  # Attention + MLP projections in the language model. Vision tower stays frozen.
   target_modules: ["q_proj", "k_proj", "v_proj", "o_proj",
                    "gate_proj", "up_proj", "down_proj"]
 
 data:
-  # Any HF dataset with an image + a question/answer (or caption) per row.
-  # Field names are mapped below so you can swap datasets without code changes.
-  dataset_name: "merve/vqav2-small"
-  split: "validation"         # this small dataset ships a single 'validation' split
-  max_samples: 2000           # cap for quick runs; set null to use all
-  # ---- field mapping: tell the loader which columns to use ----
-  image_field: "image"
-  question_field: "question"
-  answer_field: "multiple_choice_answer"   # for captioning sets, set to the caption field
-  # Fixed instruction prepended to every question (helps a small model stay on task).
-  system_prompt: "You are a helpful vision assistant. Answer the question about the image concisely."
+  source: "local_csv"
+  images_dir: "/kaggle/input/meme-data/MemeDecode/Train/Image"
+  csv_path: "/kaggle/input/meme-data/MemeDecode/Train/Train.csv"
+  image_field: "Image_name"
+  answer_field: "Target"
+  labels: ["Neutral", "Genders", "Religion", "Politics"]
+  val_fraction: 0.05          # hold out 5% for the inference sanity-check
+  max_samples: null           # use all 2903 train rows
+  question: "Classify this meme into exactly one category."
+  system_prompt: "You are a meme classifier. Look at the meme image and reply with exactly one of these categories and nothing else: Neutral, Genders, Religion, Politics."
 
 train:
-  output_dir: "/kaggle/working/qwen2vl-lora"   # persists & is downloadable on Kaggle
+  output_dir: "/kaggle/working/qwen2vl-meme-lora"
   num_epochs: 1
   per_device_batch_size: 1
-  grad_accum_steps: 8         # effective batch = 1 * 8 = 8
+  grad_accum_steps: 8         # effective batch = 8
   learning_rate: 1.0e-4
   warmup_ratio: 0.03
   weight_decay: 0.0
   logging_steps: 10
-  save_steps: 100             # checkpoint often — Kaggle sessions can drop
+  save_steps: 200
   save_total_limit: 2
   max_seq_length: 1024
-  bf16: false                 # T4 has no bf16; use fp16. Set true only on A100/L4.
+  bf16: false
   fp16: true
   gradient_checkpointing: true
   seed: 42
-  resume: true               # auto-resume from the latest checkpoint if present
+  resume: true

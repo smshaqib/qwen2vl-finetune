@@ -23,7 +23,7 @@ from transformers import (
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
-from dataset import QwenVLCollator, load_hf_dataset
+from dataset import QwenVLCollator, load_dataset_split
 
 
 def load_config(path):
@@ -103,7 +103,8 @@ def main():
         model.config.use_cache = False
 
     # ---- Data -------------------------------------------------------------
-    train_ds = load_hf_dataset(cfg)
+    train_ds, _val_ds = load_dataset_split(cfg)
+    print(f"[data] training on {len(train_ds)} samples")
     collator = QwenVLCollator(processor, cfg)
 
     # ---- Trainer ----------------------------------------------------------

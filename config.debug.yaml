@@ -1,10 +1,10 @@
-# Fast smoke-test config: tiny sample, frequent saves. Use this for your FIRST
-# Kaggle run to shake out errors in ~1-2 min. Then switch to config.yaml for real training.
+# Fast smoke-test: tiny sample of the meme dataset, frequent saves.
 #   python train.py --config config.debug.yaml
+# Once this passes, run the full set with: --config config.yaml
 
 model:
   name: "Qwen/Qwen2-VL-2B-Instruct"
-  load_in_4bit: false        # fp16 LoRA — works on P100/T4; 2B fits in 16 GB
+  load_in_4bit: false
   min_pixels: 200704
   max_pixels: 1003520
 
@@ -16,16 +16,19 @@ lora:
                    "gate_proj", "up_proj", "down_proj"]
 
 data:
-  dataset_name: "merve/vqav2-small"
-  split: "validation"
-  max_samples: 8            # tiny — just to prove the pipeline runs
-  image_field: "image"
-  question_field: "question"
-  answer_field: "multiple_choice_answer"
-  system_prompt: "You are a helpful vision assistant. Answer the question about the image concisely."
+  source: "local_csv"
+  images_dir: "/kaggle/input/meme-data/MemeDecode/Train/Image"
+  csv_path: "/kaggle/input/meme-data/MemeDecode/Train/Train.csv"
+  image_field: "Image_name"
+  answer_field: "Target"
+  labels: ["Neutral", "Genders", "Religion", "Politics"]
+  val_fraction: 0.0
+  max_samples: 16             # tiny — just prove the pipeline runs
+  question: "Classify this meme into exactly one category."
+  system_prompt: "You are a meme classifier. Look at the meme image and reply with exactly one of these categories and nothing else: Neutral, Genders, Religion, Politics."
 
 train:
-  output_dir: "/kaggle/working/qwen2vl-lora-debug"
+  output_dir: "/kaggle/working/qwen2vl-meme-lora-debug"
   num_epochs: 1
   per_device_batch_size: 1
   grad_accum_steps: 1
@@ -33,7 +36,7 @@ train:
   warmup_ratio: 0.0
   weight_decay: 0.0
   logging_steps: 1
-  save_steps: 4
+  save_steps: 8
   save_total_limit: 1
   max_seq_length: 1024
   bf16: false
