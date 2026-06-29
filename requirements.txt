@@ -1,0 +1,11 @@
+# Core (Kaggle images usually already have torch; pin only what's needed)
+transformers>=4.45.0
+accelerate>=0.34.0
+peft>=0.13.0
+bitsandbytes>=0.44.0
+datasets>=3.0.0
+qwen-vl-utils>=0.0.8
+pillow
+pyyaml
+# Optional: faster training / logging
+# flash-attn   # often not installable on Kaggle T4 — leave commented unless needed

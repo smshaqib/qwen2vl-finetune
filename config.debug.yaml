@@ -1,0 +1,43 @@
+# Fast smoke-test config: tiny sample, frequent saves. Use this for your FIRST
+# Kaggle run to shake out errors in ~1-2 min. Then switch to config.yaml for real training.
+#   python train.py --config config.debug.yaml
+
+model:
+  name: "Qwen/Qwen2-VL-2B-Instruct"
+  load_in_4bit: true
+  min_pixels: 200704
+  max_pixels: 1003520
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: ["q_proj", "k_proj", "v_proj", "o_proj",
+                   "gate_proj", "up_proj", "down_proj"]
+
+data:
+  dataset_name: "merve/vqav2-small"
+  split: "validation"
+  max_samples: 8            # tiny — just to prove the pipeline runs
+  image_field: "image"
+  question_field: "question"
+  answer_field: "multiple_choice_answer"
+  system_prompt: "You are a helpful vision assistant. Answer the question about the image concisely."
+
+train:
+  output_dir: "/kaggle/working/qwen2vl-lora-debug"
+  num_epochs: 1
+  per_device_batch_size: 1
+  grad_accum_steps: 1
+  learning_rate: 1.0e-4
+  warmup_ratio: 0.0
+  weight_decay: 0.0
+  logging_steps: 1
+  save_steps: 4
+  save_total_limit: 1
+  max_seq_length: 1024
+  bf16: false
+  fp16: true
+  gradient_checkpointing: true
+  seed: 42
+  resume: true
