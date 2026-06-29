@@ -57,7 +57,11 @@ def main():
         max_pixels=mcfg["max_pixels"],
     )
 
-    # ---- 4-bit base model -------------------------------------------------
+    # ---- Base model -------------------------------------------------------
+    # 4-bit (QLoRA) needs bitsandbytes + a GPU with compute capability >= 7.0
+    # (e.g. T4). On older GPUs (e.g. P100, CC 6.0) bitsandbytes 4-bit kernels
+    # fail with "named symbol not found", so we fall back to plain fp16. The 2B
+    # model fits in 16 GB in fp16; reserve 4-bit for the 7B on a T4.
     quant_cfg = None
     if mcfg["load_in_4bit"]:
         quant_cfg = BitsAndBytesConfig(
@@ -73,9 +77,15 @@ def main():
         torch_dtype=torch.float16,
         device_map="auto",
     )
-    model = prepare_model_for_kbit_training(
-        model, use_gradient_checkpointing=tcfg["gradient_checkpointing"]
-    )
+
+    if mcfg["load_in_4bit"]:
+        model = prepare_model_for_kbit_training(
+            model, use_gradient_checkpointing=tcfg["gradient_checkpointing"]
+        )
+    elif tcfg["gradient_checkpointing"]:
+        # Non-quantized + gradient checkpointing: inputs must require grad so
+        # gradients flow back through the checkpointed (frozen-base) graph.
+        model.enable_input_require_grads()
 
     # ---- LoRA adapters (vision tower stays frozen) ------------------------
     lcfg = cfg["lora"]

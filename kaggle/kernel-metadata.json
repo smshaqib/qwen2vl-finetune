@@ -1,0 +1,13 @@
+{
+  "id": "smshaqib/qwen2vl-kaggle-run",
+  "title": "qwen2vl-kaggle-run",
+  "code_file": "run_notebook.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}

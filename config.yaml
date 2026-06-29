@@ -4,9 +4,12 @@
 # ----------------------------------------------------------------------------
 
 model:
-  # Swap to "Qwen/Qwen2-VL-7B-Instruct" once 2B works (7B needs QLoRA + tight batch).
+  # Swap to "Qwen/Qwen2-VL-7B-Instruct" once 2B works (7B needs 4-bit + a T4).
   name: "Qwen/Qwen2-VL-2B-Instruct"
-  load_in_4bit: true          # QLoRA: 4-bit base weights (required to fit on a T4)
+  # fp16 LoRA for the 2B model — fits in 16 GB and works on P100 or T4.
+  # Set true ONLY for the 7B model AND when running on a T4 (bitsandbytes 4-bit
+  # is unsupported on the older P100 / compute capability 6.0).
+  load_in_4bit: false
   # Image token budget per sample. Lower = less VRAM, faster. Qwen uses 28x28 patches.
   min_pixels: 200704          # 256*28*28
   max_pixels: 1003520         # 1280*28*28

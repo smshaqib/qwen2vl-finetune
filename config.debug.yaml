@@ -4,7 +4,7 @@
 
 model:
   name: "Qwen/Qwen2-VL-2B-Instruct"
-  load_in_4bit: true
+  load_in_4bit: false        # fp16 LoRA — works on P100/T4; 2B fits in 16 GB
   min_pixels: 200704
   max_pixels: 1003520
 
